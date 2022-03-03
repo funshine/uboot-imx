@@ -182,6 +182,13 @@ enum pd_data_msg_type {
 	PD_DATA_VENDOR_DEF = 15,
 };
 
+enum vdm_command_type_type {
+	VDM_REQ = 0,
+	VDM_ACK = 1,
+	VDM_NAK = 2,
+	VDM_BUSY = 3,
+};
+
 enum vdm_command_type {
 	/* 0 Reserved */
 	VDM_DISCOVER_IDENTITY = 1,
@@ -192,6 +199,20 @@ enum vdm_command_type {
 	VDM_ATTENTION = 6,
 	/* 7-15 Reserved */
 	/* 16-31 SVID Specific */
+};
+
+enum vdo_ufp_type {
+	NOT_UFP = 0,
+	PD_USB_HUB = 1,
+	PD_USB_PERIPH = 2,
+	PSD = 3,
+};
+
+enum vdo_dfp_type {
+	NOT_DFP = 0,
+	PD_USB_HUB_DFP = 1,
+	PD_USB_HOST = 2,
+	POWER_BRICK = 3,
 };
 
 enum tcpc_transmit_type {
@@ -214,7 +235,6 @@ enum pd_sink_state {
 	SINK_READY,
 };
 
-
 #define PD_REV10        0x0
 #define PD_REV20        0x1
 
@@ -236,7 +256,6 @@ enum pd_sink_state {
 	 (PD_REV20 << PD_HEADER_REV_SHIFT) |                            \
 	 (((id) & PD_HEADER_ID_MASK) << PD_HEADER_ID_SHIFT) |           \
 	 (((cnt) & PD_HEADER_CNT_MASK) << PD_HEADER_CNT_SHIFT))
-
 
 static inline unsigned int pd_header_cnt(uint16_t header)
 {
@@ -413,28 +432,52 @@ static inline unsigned int rdo_max_power(u32 rdo)
 	return ((rdo >> RDO_BATT_MAX_PWR_SHIFT) & RDO_PWR_MASK) * 250;
 }
 
-#define PD_VDM_HEADER_SVID_SHIFT           16
-#define PD_VDM_HEADER_SVID_MASK            0xFFFF
-#define PD_VDM_HEADER_TYPE_SHIFT           15
-#define PD_VDM_HEADER_TYPE_MASK            0x1
-#define PD_VDM_HEADER_COMMAND_TYPE_SHIFT   6
-#define PD_VDM_HEADER_COMMAND_TYPE_MASK    0x3
-#define PD_VDM_HEADER_COMMAND_SHIFT        0
-#define PD_VDM_HEADER_COMMAND_MASK         0x1F
+#define VDM_PD_SID                      0xFF00
+#define VDM_TYPE_STRUCTURED             0x1
+
+#define VDM_HEADER_SVID_SHIFT           16
+#define VDM_HEADER_SVID_MASK            0xFFFF
+#define VDM_HEADER_TYPE_SHIFT           15
+#define VDM_HEADER_VER_SHIFT            13
+#define VDM_HEADER_CMD_TYP_SHIFT        6
+#define VDM_HEADER_CMD_TYP_MASK         0x3
+#define VDM_HEADER_CMD_MASK             0x1F
+
+#define VDM_HEADER_STRUCTURED(svid, cmdtyp, cmd)                    \
+	(((svid & VDM_HEADER_SVID_MASK) << VDM_HEADER_SVID_SHIFT) |     \
+	 (VDM_TYPE_STRUCTURED << VDM_HEADER_TYPE_SHIFT) |               \
+	 (PD_REV10 << VDM_HEADER_VER_SHIFT) |                           \
+	 ((cmdtyp & VDM_HEADER_CMD_TYP_MASK) << VDM_HEADER_CMD_TYP_SHIFT) |     \
+	 (cmd & VDM_HEADER_CMD_MASK))
+	
+#define VDM_ID_HEADER_HOST              BIT(31)
+#define VDM_ID_HEADER_DEV               BIT(30)
+#define VDM_ID_HEADER_UFP_SHIFT         27
+#define VDM_ID_HEADER_UFP_MASK          0x7
+#define VDM_ID_HEADER_DFP_SHIFT         23
+#define VDM_ID_HEADER_DFP_MASK          0x7
+#define VDM_ID_HEADER_VID_MASK          0xFFFF
+
+#define VDM_ID_HEADER(host, device, ufp, dfp, vid)                  \
+	(((host) ? VDM_ID_HEADER_HOST : 0 ) |                           \
+	 ((device) ? VDM_ID_HEADER_DEV : 0 ) |                          \
+	 ((ufp & VDM_ID_HEADER_UFP_MASK) << VDM_ID_HEADER_UFP_SHIFT) |  \
+	 ((dfp & VDM_ID_HEADER_DFP_MASK) << VDM_ID_HEADER_DFP_SHIFT) |  \
+	 (vid & VDM_ID_HEADER_VID_MASK))
 
 static inline unsigned int vdm_type(u32 vdm)
 {
-	return (vdm >> PD_VDM_HEADER_TYPE_SHIFT) & PD_VDM_HEADER_TYPE_MASK;
+	return (vdm >> VDM_HEADER_TYPE_SHIFT) & VDM_HEADER_TYPE_SHIFT;
 }
 
 static inline unsigned int vdm_command_type(u32 vdm)
 {
-	return (vdm >> PD_VDM_HEADER_COMMAND_TYPE_SHIFT) & PD_VDM_HEADER_COMMAND_TYPE_MASK;
+	return (vdm >> VDM_HEADER_CMD_TYP_SHIFT) & VDM_HEADER_CMD_TYP_MASK;
 }
 
 static inline unsigned int vdm_command(u32 vdm)
 {
-	return (vdm >> PD_VDM_HEADER_COMMAND_SHIFT) & PD_VDM_HEADER_COMMAND_MASK;
+	return (vdm & VDM_HEADER_CMD_MASK);
 }
 
 #define TCPC_LOG_BUFFER_SIZE 1024

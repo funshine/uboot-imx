@@ -486,7 +486,7 @@ static int tcpc_pd_receive_message(struct tcpc_port *port, struct pd_message *ms
 	/* Generally the max tSenderResponse is 30ms, max tTypeCSendSourceCap is 200ms, we set the timeout to 500ms */
 	ret = tcpc_polling_reg(port, TCPC_ALERT, 2, TCPC_ALERT_RX_STATUS, TCPC_ALERT_RX_STATUS, 500);
 	if (ret) {
-		tcpc_log(port, "%s: Polling ALERT register, TCPC_ALERT_RX_STATUS bit failed, ret = %d\n",
+		tcpc_debug_log(port, "%s: Polling ALERT register, TCPC_ALERT_RX_STATUS bit failed, ret = %d\n",
 			__func__, ret);
 		return ret;
 	}
@@ -704,6 +704,9 @@ static int tcpc_pd_build_request(struct tcpc_port *port,
 		max_ma = max_mw * 1000 / mv;
 	}
 
+	/* Set response flags */
+	flags |= RDO_USB_COMM | RDO_NO_SUSPEND;
+
 	if (type == PDO_TYPE_BATT) {
 		*rdo = RDO_BATT(index + 1, mw, max_mw, flags);
 
@@ -724,12 +727,13 @@ static int tcpc_pd_build_request(struct tcpc_port *port,
 static void tcpc_handle_vdm(struct tcpc_port *port, struct pd_message *msg, unsigned int objcount)
 {
 	enum vdm_command_type vdm_cmd;
-	u32 vdm_header, vdo;
-	int i;
+	struct pd_message tx_msg;
+	u32 vdm_header;
+	int ret;
 	
 	vdm_header = msg->payload[0];
 	
-	if (vdm_type(vdm_header) != 1) {
+	if (vdm_type(vdm_header) != VDM_TYPE_STRUCTURED) {
 		/* Unstructured */
 		tcpc_log(port, "VDM type: unstructured\n");
 		return;
@@ -737,10 +741,20 @@ static void tcpc_handle_vdm(struct tcpc_port *port, struct pd_message *msg, unsi
 	
 	/* Structured */
 	vdm_cmd = vdm_command(vdm_header);
-	tcpc_log(port, "VDM type: structured, cmd: %u\n", vdm_cmd);
+	tcpc_debug_log(port, "VDM type: structured, cmd: %u\n", vdm_cmd);
 	
 	switch(vdm_cmd) {
 		case VDM_DISCOVER_IDENTITY:
+			memset(&tx_msg, 0, sizeof(tx_msg));
+			tx_msg.header = PD_HEADER(PD_DATA_VENDOR_DEF, TYPEC_SINK, TYPEC_DEVICE, port->tx_msg_id, 4);
+			tx_msg.payload[0] = VDM_HEADER_STRUCTURED(VDM_PD_SID, VDM_ACK, VDM_DISCOVER_IDENTITY);
+			tx_msg.payload[1] = VDM_ID_HEADER(0, 1, PD_USB_PERIPH, NOT_DFP, 0x064b);
+			tx_msg.payload[2] = 0x0;
+			tx_msg.payload[3] = 0xa4a2 << 16;
+
+			ret = tcpc_pd_transmit_message(port, &tx_msg, 18);
+			if (ret)
+				tcpc_log(port, "send request failed\n");
 			return;
 		case VDM_DISCOVER_SVIDs:
 		case VDM_DISCOVER_MODES:
@@ -753,18 +767,13 @@ static void tcpc_handle_vdm(struct tcpc_port *port, struct pd_message *msg, unsi
 			tcpc_log(port, "Unexpect VDM command: %u\n", vdm_cmd);
 			break;
 	}
-	
-	for (i = 1; i < objcount; i++) {
-		vdo = msg->payload[i];
-		tcpc_debug_log(port, "VDO %d: payload %u\n", i, vdo);
-	}
 }
 
 static void tcpc_pd_sink_process(struct tcpc_port *port)
 {
 	int ret;
 	uint8_t msgtype;
-	uint32_t objcnt;
+	uint32_t objcnt, rdo = 0;
 	struct pd_message msg;
 	enum pd_sink_state pd_state = WAIT_SOURCE_CAP;
 
@@ -777,15 +786,8 @@ static void tcpc_pd_sink_process(struct tcpc_port *port)
 
 		switch (pd_state) {
 		case WAIT_SOURCE_CAP:
-		case SINK_READY:
-			if (msgtype == PD_DATA_VENDOR_DEF){
-				tcpc_handle_vdm(port, &msg, objcnt);
-			}
-				
 			if (msgtype != PD_DATA_SOURCE_CAP)
 				continue;
-
-			uint32_t rdo = 0;
 
 			tcpc_log_source_caps(port, &msg, objcnt);
 
@@ -795,7 +797,32 @@ static void tcpc_pd_sink_process(struct tcpc_port *port)
 				&rdo);
 
 			memset(&msg, 0, sizeof(msg));
-			msg.header = PD_HEADER(PD_DATA_REQUEST, 0, 0, port->tx_msg_id, 1);  /* power sink, data device, id 0, len 1 */
+			msg.header = PD_HEADER(PD_DATA_REQUEST, TYPEC_SINK, TYPEC_DEVICE, port->tx_msg_id, 1);
+			msg.payload[0] = rdo;
+
+			ret = tcpc_pd_transmit_message(port, &msg, 6);
+			if (ret)
+				tcpc_log(port, "send request failed\n");
+			else
+				pd_state = WAIT_SOURCE_ACCEPT;
+
+			break;
+		case SINK_READY:
+			if (msgtype == PD_DATA_VENDOR_DEF){
+				tcpc_handle_vdm(port, &msg, objcnt);
+				continue;
+			}
+
+			if (msgtype != PD_CTRL_GET_SINK_CAP)
+				continue;
+
+			tcpc_pd_build_request(port, &msg, objcnt,
+				port->cfg.max_snk_mv, port->cfg.max_snk_ma,
+				port->cfg.max_snk_mw, port->cfg.op_snk_mv,
+				&rdo);
+
+			memset(&msg, 0, sizeof(msg));
+			msg.header = PD_HEADER(PD_DATA_SINK_CAP, TYPEC_SINK, TYPEC_DEVICE, port->tx_msg_id, 1);
 			msg.payload[0] = rdo;
 
 			ret = tcpc_pd_transmit_message(port, &msg, 6);
