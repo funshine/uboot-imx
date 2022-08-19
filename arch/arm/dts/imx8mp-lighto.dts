@@ -9,8 +9,8 @@
 #include "imx8mp.dtsi"
 
 / {
-	model = "NXP i.MX8MPlus LPDDR4 EVK board";
-	compatible = "fsl,imx8mp-evk", "fsl,imx8mp";
+	model = "NXP i.MX8MPlus LPDDR4 Lighto board";
+	compatible = "fsl,imx8mp-lighto", "fsl,imx8mp";
 
 	chosen {
 		bootargs = "console=ttymxc1,115200";
@@ -121,9 +121,9 @@
 		#address-cells = <1>;
 		#size-cells = <0>;
 
-		ethphy0: ethernet-phy@1 {
+		ethphy0: ethernet-phy@4 {
 			compatible = "ethernet-phy-ieee802.3-c22";
-			reg = <1>;
+			reg = <4>;
 			eee-broken-1000t;
 		};
 	};
@@ -134,26 +134,6 @@
 	pinctrl-0 = <&pinctrl_flexcan1>;
 	xceiver-supply = <&reg_can1_stby>;
 	status = "okay";
-};
-
-&eqos {
-	pinctrl-names = "default";
-	pinctrl-0 = <&pinctrl_eqos>;
-	phy-mode = "rgmii-id";
-	phy-handle = <&ethphy0>;
-	status = "okay";
-
-	mdio {
-		compatible = "snps,dwmac-mdio";
-		#address-cells = <1>;
-		#size-cells = <0>;
-
-		ethphy0: ethernet-phy@1 {
-			compatible = "ethernet-phy-ieee802.3-c22";
-			reg = <1>;
-			eee-broken-1000t;
-		};
-	};
 };
 
 &flexcan2 {
@@ -429,9 +409,9 @@
 	pinctrl-0 = <&pinctrl_usdhc2>, <&pinctrl_usdhc2_gpio>;
 	pinctrl-1 = <&pinctrl_usdhc2_100mhz>, <&pinctrl_usdhc2_gpio>;
 	pinctrl-2 = <&pinctrl_usdhc2_200mhz>, <&pinctrl_usdhc2_gpio>;
-	cd-gpios = <&gpio2 12 GPIO_ACTIVE_LOW>;
 	vmmc-supply = <&reg_usdhc2_vmmc>;
 	bus-width = <4>;
+	non-removable;
 	status = "okay";
 };
 
@@ -471,7 +451,7 @@
 			MX8MP_IOMUXC_ENET_TD3__ENET_QOS_RGMII_TD3		0x1f
 			MX8MP_IOMUXC_ENET_TX_CTL__ENET_QOS_RGMII_TX_CTL	0x1f
 			MX8MP_IOMUXC_ENET_TXC__CCM_ENET_QOS_CLOCK_GENERATE_TX_CLK	0x1f
-			MX8MP_IOMUXC_SAI2_RXC__GPIO4_IO22		0x19
+			MX8MP_IOMUXC_GPIO1_IO11__GPIO1_IO11				0x19
 		>;
 	};
 
@@ -643,7 +623,7 @@
 			MX8MP_IOMUXC_SD2_DATA1__USDHC2_DATA1	0x1d4
 			MX8MP_IOMUXC_SD2_DATA2__USDHC2_DATA2	0x1d4
 			MX8MP_IOMUXC_SD2_DATA3__USDHC2_DATA3	0x1d4
-			MX8MP_IOMUXC_GPIO1_IO04__USDHC2_VSELECT 0xc1
+			MX8MP_IOMUXC_GPIO1_IO04__USDHC2_VSELECT	0xc1
 		>;
 	};
 
@@ -655,7 +635,7 @@
 			MX8MP_IOMUXC_SD2_DATA1__USDHC2_DATA1	0x1d6
 			MX8MP_IOMUXC_SD2_DATA2__USDHC2_DATA2	0x1d6
 			MX8MP_IOMUXC_SD2_DATA3__USDHC2_DATA3	0x1d6
-			MX8MP_IOMUXC_GPIO1_IO04__USDHC2_VSELECT 0xc1
+			MX8MP_IOMUXC_GPIO1_IO04__USDHC2_VSELECT	0xc1
 		>;
 	};
 
