@@ -2,4 +2,4 @@
 #
 # Copyright (C) Lighto
 
-obj-$(CONFIG_USB_TCPC) += tcpc.o
+# obj-$(CONFIG_USB_TCPC) += tcpc.o
