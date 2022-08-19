@@ -9,8 +9,8 @@
 #include "imx8mp.dtsi"
 
 / {
-	model = "NXP i.MX8MPlus LPDDR4 EVK board";
-	compatible = "fsl,imx8mp-evk", "fsl,imx8mp";
+	model = "NXP i.MX8MPlus LPDDR4 Lighto board";
+	compatible = "fsl,imx8mp-lighto", "fsl,imx8mp";
 
 	chosen {
 		bootargs = "console=ttymxc1,115200";
