@@ -4,7 +4,8 @@
 # SPDX-License-Identifier:      GPL-2.0+
 #
 
-obj-y += imx8mp_lighto.o mmc.o
+obj-y += imx8mp_lighto.o
+obj-y += ../../freescale/common/
 
 ifdef CONFIG_SPL_BUILD
 obj-y += spl.o
