@@ -1,0 +1,14 @@
+if TARGET_IMX8MP_LIGHTO
+
+config SYS_BOARD
+	default "imx8mp_lighto"
+
+config SYS_VENDOR
+	default "lighto"
+
+config SYS_CONFIG_NAME
+	default "imx8mp_lighto"
+
+source "board/freescale/common/Kconfig"
+
+endif
