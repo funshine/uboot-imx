@@ -279,10 +279,9 @@
 #include "imx8mp_evk_android.h"
 #endif
 
-#define CONFIG_IMX8MP_LIGHTO
-#if defined(CONFIG_IMX8MP_LIGHTO)
-#define CONFIG_SYS_SPL_PARAM_MAGIC	0xEE3355AA
-#define CONFIG_SYS_SPL_PARAM_ADDR	(0x00900000 + 0x80)		/* OCRAM base + offset */
+#if defined(CONFIG_TARGET_IMX8MP_LIGHTO)
+// #define CONFIG_SYS_SPL_PARAM_MAGIC	0xEE3355AA
+// #define CONFIG_SYS_SPL_PARAM_ADDR	(0x00900000 + 0x80)		/* OCRAM base + offset */
 
 #ifdef CONFIG_MMC_IO_VOLTAGE
 #undef CONFIG_MMC_IO_VOLTAGE
@@ -305,6 +304,6 @@
 #define DWC_NET_PHYADDR			4
 #define CONFIG_NET_RANDOM_ETHADDR
 #define CONFIG_PHY_ATHEROS
-#endif	/* ! CONFIG_IMX8MP_LIGHTO */
+#endif	/* ! CONFIG_TARGET_IMX8MP_LIGHTO */
 
 #endif
