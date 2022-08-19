@@ -3,8 +3,8 @@
  * Copyright 2019 NXP
  */
 
-#ifndef __IMX8MP_EVK_H
-#define __IMX8MP_EVK_H
+#ifndef __IMX8MP_LIGHTO_H
+#define __IMX8MP_LIGHTO_H
 
 #include <linux/sizes.h>
 #include <linux/stringify.h>
