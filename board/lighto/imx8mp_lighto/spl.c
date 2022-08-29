@@ -176,13 +176,13 @@ void board_init_f(ulong dummy)
 		hang();
 	}
 
-	ret = uclass_get_device_by_name(UCLASS_CLK,
-					"clock-controller@30380000",
-					&dev);
-	if (ret < 0) {
-		printf("Failed to find clock node. Check device tree\n");
-		hang();
-	}
+	// ret = uclass_get_device_by_name(UCLASS_CLK,
+	// 				"clock-controller@30380000",
+	// 				&dev);
+	// if (ret < 0) {
+	// 	printf("Failed to find clock node. Check device tree\n");
+	// 	hang();
+	// }
 
 	enable_tzc380();
 
