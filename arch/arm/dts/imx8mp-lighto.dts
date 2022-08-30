@@ -294,6 +294,7 @@
 	cd-gpios = <&gpio2 12 GPIO_ACTIVE_LOW>;
 	vmmc-supply = <&reg_usdhc2_vmmc>;
 	bus-width = <4>;
+	non-removable;	/* carrier board sd cd not connnected */
 	status = "okay";
 };
 
