@@ -18,7 +18,7 @@
 #include <spl.h>
 #include <asm/mach-imx/dma.h>
 #include <power/pmic.h>
-#include "../common/tcpc.h"
+#include "../../freescale/common/tcpc.h"
 #include <usb.h>
 #include <dwc3-uboot.h>
 #include <asm/mach-imx/sys_proto.h>
@@ -29,7 +29,7 @@
 #include <power/bd71837.h>
 #include <asm/mach-imx/video.h>
 
-#define ONE_GB 0x40000000ULL
+#define TWO_GB 0x80000000ULL
 
 DECLARE_GLOBAL_DATA_PTR;
 
@@ -62,16 +62,16 @@ int board_phys_sdram_size(phys_size_t *size)
 
 	ptr = (volatile unsigned int *)CONFIG_SYS_SDRAM_BASE;
 	save1 = ptr[0];
-	save2 = ptr[ONE_GB/4];
-	ptr[ONE_GB/4] = save1 << 1;
+	save2 = ptr[TWO_GB/4];
+	ptr[TWO_GB/4] = save1 << 1;
 	ptr[0] = ~save1;
-	mirror = ptr[ONE_GB/4];
+	mirror = ptr[TWO_GB/4];
 	if (mirror == ~save1)
-		*size = ONE_GB;
+		*size = TWO_GB;
 	else
-		*size = 3*ONE_GB;
+		*size = 2*TWO_GB;
 	ptr[0] = save1;
-	ptr[ONE_GB/4] = save2;
+	ptr[TWO_GB/4] = save2;
 	return 0;
 }
 
