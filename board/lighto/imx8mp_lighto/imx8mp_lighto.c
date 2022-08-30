@@ -18,7 +18,7 @@
 #include <spl.h>
 #include <asm/mach-imx/dma.h>
 #include <power/pmic.h>
-#include "../../freescale/common/tcpc.h"
+#include "../common/tcpc.h"
 #include <usb.h>
 #include <dwc3-uboot.h>
 #include <asm/mach-imx/sys_proto.h>
