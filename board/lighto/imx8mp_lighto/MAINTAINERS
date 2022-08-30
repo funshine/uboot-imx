@@ -1,6 +1,6 @@
 i.MX8MP LIGHTO BOARD
 M:	Guijie Hong <guijie.hong@gmail.com>
 S:	Maintained
-F:	board/lighot/imx8mp_lighto/
+F:	board/lighto/imx8mp_lighto/
 F:	include/configs/imx8mp_lighto.h
 F:	configs/imx8mp_lighto_defconfig

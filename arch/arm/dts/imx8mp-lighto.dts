@@ -17,22 +17,22 @@
 		stdout-path = &uart2;
 	};
 
+	memory@40000000 {
+		device_type = "memory";
+		reg = <0x0 0x40000000 0 0x40000000>,
+		      <0x1 0x00000000 0 0x40000000>;
+	};
+
 	gpio-leds {
 		compatible = "gpio-leds";
 		pinctrl-names = "default";
 		pinctrl-0 = <&pinctrl_gpio_led>;
 
 		status {
-			label = "sys";
+			label = "status";
 			gpios = <&gpio3 16 GPIO_ACTIVE_HIGH>;
-			default-state = "on";
+			default-state = "on"; /* LED GREEN */
 		};
-	};
-
-	memory@40000000 {
-		device_type = "memory";
-		reg = <0x0 0x40000000 0 0x40000000>,
-		      <0x1 0x00000000 0 0x40000000>;
 	};
 
 	reg_usdhc2_vmmc: regulator-usdhc2 {
@@ -46,11 +46,6 @@
 		enable-active-high;
 		startup-delay-us = <100>;
 		off-on-delay-us = <12000>;
-	};
-
-	dsi_host: dsi-host {
-		compatible = "samsung,sec-mipi-dsi";
-		status = "okay";
 	};
 };
 
@@ -253,7 +248,7 @@
 };
 
 &mipi_dsi {
-	status = "okay";
+	status = "disabled";
 };
 
 &snvs_pwrkey {
@@ -285,6 +280,8 @@
 };
 
 &usb_dwc3_1 {
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_usb1_vbus>;
 	dr_mode = "host";
 	status = "okay";
 };
@@ -294,9 +291,10 @@
 	pinctrl-0 = <&pinctrl_usdhc2>, <&pinctrl_usdhc2_gpio>;
 	pinctrl-1 = <&pinctrl_usdhc2_100mhz>, <&pinctrl_usdhc2_gpio>;
 	pinctrl-2 = <&pinctrl_usdhc2_200mhz>, <&pinctrl_usdhc2_gpio>;
+	cd-gpios = <&gpio2 12 GPIO_ACTIVE_LOW>;
 	vmmc-supply = <&reg_usdhc2_vmmc>;
 	bus-width = <4>;
-	non-removable;
+	non-removable;	/* carrier board sd cd not connnected */
 	status = "okay";
 };
 
@@ -431,12 +429,6 @@
 		>;
 	};
 
-	pinctrl_typec: typec1grp {
-		fsl,pins = <
-			MX8MP_IOMUXC_SAI1_TXD7__GPIO4_IO19	0x1c4
-		>;
-	};
-
 	pinctrl_typec_mux: typec1muxgrp {
 		fsl,pins = <
 			MX8MP_IOMUXC_SAI1_MCLK__GPIO4_IO20	0x16
@@ -458,7 +450,7 @@
 
 	pinctrl_usb1_vbus: usb1grp {
 		fsl,pins = <
-			MX8MP_IOMUXC_GPIO1_IO14__GPIO1_IO14	0x19
+			MX8MP_IOMUXC_GPIO1_IO14__USB2_OTG_PWR	0x19
 		>;
 	};
 

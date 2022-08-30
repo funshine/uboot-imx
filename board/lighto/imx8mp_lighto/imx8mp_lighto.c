@@ -29,6 +29,8 @@
 #include <linux/arm-smccc.h>
 #include <mmc.h>
 
+#define TWO_GB 0x80000000ULL
+
 DECLARE_GLOBAL_DATA_PTR;
 
 #define UART_PAD_CTRL	(PAD_CTL_DSE6 | PAD_CTL_FSEL1)
@@ -51,6 +53,28 @@ static void setup_gpmi_nand(void)
 }
 #endif
 
+int board_phys_sdram_size(phys_size_t *size)
+{
+	unsigned int save1, save2, mirror;
+	volatile unsigned int *ptr;
+	if (!size)
+		return -EINVAL;
+
+	ptr = (volatile unsigned int *)CONFIG_SYS_SDRAM_BASE;
+	save1 = ptr[0];
+	save2 = ptr[TWO_GB/4];
+	ptr[TWO_GB/4] = save1 << 1;
+	ptr[0] = ~save1;
+	mirror = ptr[TWO_GB/4];
+	if (mirror == ~save1)
+		*size = TWO_GB;
+	else
+		*size = 2*TWO_GB;
+	ptr[0] = save1;
+	ptr[TWO_GB/4] = save2;
+	return 0;
+}
+
 int board_early_init_f(void)
 {
 	struct wdog_regs *wdog = (struct wdog_regs *)WDOG1_BASE_ADDR;
@@ -70,17 +94,6 @@ int board_early_init_f(void)
 int ft_board_setup(void *blob, struct bd_info *bd)
 {
 #ifdef CONFIG_IMX8M_DRAM_INLINE_ECC
-#ifdef CONFIG_TARGET_IMX8MP_DDR4_EVK
-	int rc;
-	phys_addr_t ecc_start = 0x120000000;
-	size_t ecc_size = 0x20000000;
-
-	rc = add_res_mem_dt_node(blob, "ecc", ecc_start, ecc_size);
-	if (rc < 0) {
-		printf("Could not create ecc reserved-memory node.\n");
-		return rc;
-	}
-#else
 	int rc;
 	phys_addr_t ecc0_start = 0xb0000000;
 	phys_addr_t ecc1_start = 0x130000000;
@@ -104,7 +117,6 @@ int ft_board_setup(void *blob, struct bd_info *bd)
 		printf("Could not create ecc2 reserved-memory node.\n");
 		return rc;
 	}
-#endif
 #endif
 
 	return 0;
@@ -479,7 +491,7 @@ int board_late_init(void)
 	board_late_mmc_env_init();
 #endif
 #ifdef CONFIG_ENV_VARS_UBOOT_RUNTIME_CONFIG
-	env_set("board_name", "EVK");
+	env_set("board_name", "LIGHTO");
 	env_set("board_rev", "iMX8MP");
 #endif
 
